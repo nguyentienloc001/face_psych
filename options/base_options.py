@@ -1,7 +1,7 @@
 import argparse
 import os
 from util import util
-import torch
+# import torch
 
 
 class BaseOptions():
@@ -14,7 +14,7 @@ class BaseOptions():
         self.parser.add_argument('--name', type=str, default='label2city',
                                  help='name of the experiment. It decides where to store samples and models')
         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
-        self.parser.add_argument('--gpu_ids', type=str, default='1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+        self.parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         self.parser.add_argument('--Save_Dir', type=str, default='./Params/Save_Dir', help='gpu_ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         self.parser.add_argument('--AE_dir', type=str, default='./Params/AE_whole', help='models are saved here')
         self.parser.add_argument('--Conbine_dir', type=str, default='./Params/Combine', help='models are saved here')
@@ -98,7 +98,9 @@ class BaseOptions():
 
         # set gpu ids
         if len(self.opt.gpu_ids) > 0:
-            torch.cuda.set_device(self.opt.gpu_ids[0])
+            # Work around
+            self.opt.gpu_ids[0]=0
+            # torch.cuda.set_device(self.opt.gpu_ids[0])
 
         args = vars(self.opt)
 

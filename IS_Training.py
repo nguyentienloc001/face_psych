@@ -11,7 +11,7 @@ from models.IS_Model import IS_Model
 from jittor.dataset import Dataset
 import jittor_core
 import os
-jt.flags.use_cuda = 1
+jt.flags.use_cuda = 0
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2"
 print(jittor_core.get_device_count())
 def make_dataset(dir):
@@ -78,7 +78,7 @@ class AlignedDataset(Dataset):
 
 opt = TrainOptions().parse()
 all_dataset = AlignedDataset()
-all_dataset.initialize('./Asian_Face')
+all_dataset.initialize('./dataset')
 all_dataset = all_dataset.set_attrs(batch_size=1, shuffle=True)
 dataset_size = len(all_dataset)
 feature_list = ['eye1', 'eye2', 'mouth', 'nose', 'bg', 'G']
@@ -131,46 +131,47 @@ for epoch in range(start_epoch, 100 + 100 + 1):
 
         loss_D = (loss_dict['D_fake'] + loss_dict['D_real']) * 0.5
         loss_G = loss_dict['G_GAN'] + loss_dict.get('G_GAN_Feat', 0) + loss_dict.get('G_VGG', 0)
+        print("ahi")
 
-        ############## Back Propagation ######################
-        # loss_G.sync()
+    #     ############## Back Propagation ######################
+    #     # loss_G.sync()
         optimizer_G.step(loss_G)
-        # loss_D.sync()
+    #     # loss_D.sync()
         optimizer_D.step(loss_D)
-        if i % fm_freq == 0:
-            for key in optimizer_Decoder.keys():
-                optimizer_Decoder[key].step(loss_G)
-        ############## Display results and errors ##########
-        ### print out errors
-        if total_steps % print_freq == print_delta:
-            errors = {k: v.data.item() if not isinstance(v, int) else v for k, v in loss_dict.items()}
-            t = (time.time() - iter_start_time) / print_freq
-            visualizer.print_current_errors(epoch, epoch_iter, errors, t)
-            visualizer.plot_current_errors(errors, total_steps)
-            # call(["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
-        ### display output images
-            if save_fake:
-                visuals = OrderedDict([('synthesized_image', cv2.cvtColor(generated, cv2.COLOR_BGR2RGB)),
-                                       ('real_image', util.tensor2im(image))])
-                cv2.imwrite('trainimage/synthesized_image_e' + str(epoch) + '_i'+str(i) + '.jpg', visuals["synthesized_image"])
-                cv2.imwrite('trainimage/real_image_e' + str(epoch) + '_i' + str(i) + '.jpg', visuals["real_image"])
-                visualizer.display_current_results(visuals, epoch, total_steps)
-            if total_steps % save_latest_freq == save_delta:
-                print('saving the latest model (epoch %d, total_steps %d)' % (epoch, total_steps))
-                model.save(epoch)
-                np.savetxt(iter_path, (epoch, epoch_iter)[0], delimiter=',', fmt='%d')
-            if epoch_iter >= dataset_size:
-                break
-        # end of epoch
-        iter_end_time = time.time()
-    print('End of epoch %d / %d \t Time Taken: %d sec' %
-          (epoch, niter + niter_decay, time.time() - epoch_start_time))
-    ### save model for this epoch
-    if epoch % opt.save_epoch_freq == 0:
-        print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))
-        model.save(epoch)
-        np.savetxt(iter_path, (epoch + 1, 0)[0], delimiter=',', fmt='%d')
-
-    ### linearly decay learning rate after certain iterations
-    if epoch > opt.niter:
-        model.update_learning_rate()
+    #     if i % fm_freq == 0:
+    #         for key in optimizer_Decoder.keys():
+    #             optimizer_Decoder[key].step(loss_G)
+    #     ############## Display results and errors ##########
+    #     ### print out errors
+    #     if total_steps % print_freq == print_delta:
+    #         errors = {k: v.data.item() if not isinstance(v, int) else v for k, v in loss_dict.items()}
+    #         t = (time.time() - iter_start_time) / print_freq
+    #         visualizer.print_current_errors(epoch, epoch_iter, errors, t)
+    #         visualizer.plot_current_errors(errors, total_steps)
+    #         # call(["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
+    #     ### display output images
+    #         if save_fake:
+    #             visuals = OrderedDict([('synthesized_image', cv2.cvtColor(generated, cv2.COLOR_BGR2RGB)),
+    #                                    ('real_image', util.tensor2im(image))])
+    #             cv2.imwrite('trainimage/synthesized_image_e' + str(epoch) + '_i'+str(i) + '.jpg', visuals["synthesized_image"])
+    #             cv2.imwrite('trainimage/real_image_e' + str(epoch) + '_i' + str(i) + '.jpg', visuals["real_image"])
+    #             visualizer.display_current_results(visuals, epoch, total_steps)
+    #         if total_steps % save_latest_freq == save_delta:
+    #             print('saving the latest model (epoch %d, total_steps %d)' % (epoch, total_steps))
+    #             model.save(epoch)
+    #             np.savetxt(iter_path, (epoch, epoch_iter)[0], delimiter=',', fmt='%d')
+    #         if epoch_iter >= dataset_size:
+    #             break
+    #     # end of epoch
+    #     iter_end_time = time.time()
+    # print('End of epoch %d / %d \t Time Taken: %d sec' %
+    #       (epoch, niter + niter_decay, time.time() - epoch_start_time))
+    # ### save model for this epoch
+    # if epoch % opt.save_epoch_freq == 0:
+    #     print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))
+    #     model.save(epoch)
+    #     np.savetxt(iter_path, (epoch + 1, 0)[0], delimiter=',', fmt='%d')
+    #
+    # ### linearly decay learning rate after certain iterations
+    # if epoch > opt.niter:
+    #     model.update_learning_rate()

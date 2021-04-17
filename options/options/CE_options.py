@@ -18,7 +18,7 @@ class CE_Train(BaseOptions):
         self.parser.add_argument('--output_nc', type=int, default=1, help='# of output image channels')
         self.parser.add_argument('--norm', type=str, default='instance', help='instance normalization or batch normalization')
 
-        self.parser.add_argument('--param', type=str, default='./Params', help='models are saved here')
+        self.parser.add_argument('--param', type=str, default='./Params_x', help='models are saved here')
 
         self.initialized = True
 

@@ -8,7 +8,7 @@ class wholeOptions():
 
     def initialize(self):
         # experiment specifics
-        self.parser.add_argument('--name', type=str, default='AE_whole',
+        self.parser.add_argument('--name', type=str, default='AE_whole_tmp',
                                  help='name of the experiment. It decides where to store samples and models')
         self.parser.add_argument('--partial', type=str, default='', help='facial part mouth/eye1/eye2/nose/')
         self.parser.add_argument('--latant_dim', type=int, default=512, help='vae latent dim')

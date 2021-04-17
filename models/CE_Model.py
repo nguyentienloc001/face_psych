@@ -33,8 +33,9 @@ class CE_Model(Basic_Model):
                                                         norm='instance',
                                                         output_nc=1,
                                                         latent_dim=512)
-        self.load_network(typeof='AE', network=self.net_encoder, network_label='encoder_' + feature, epoch_label='latest')
-        self.load_network(typeof='AE', network=self.net_decoder, network_label='decoder_' + feature + '_image', epoch_label='latest')
+        # self.load_network(typeof='AE', network=self.net_encoder, network_label='encoder_' + feature, epoch_label='latest')
+        # self.load_network(typeof='AE', network=self.net_decoder, network_label='decoder_' + feature + '_image', epoch_label='latest')
+        # self.net_encoder.load('/home/loc/face_psych/Params/Save_Dir/latest_net_decoder_nose.pth')
 
         self.criterion = networks.MSELoss()
 
@@ -53,7 +54,7 @@ class CE_Model(Basic_Model):
         feature_vector = self.net_encoder(input_part)
         self.feature_vector = feature_vector
         fake_part = self.net_decoder(feature_vector)
-        print(jt.reshape(self.feature_vector,(1,512)))
+        # print(jt.reshape(self.feature_vector,(1,512)))
         loss = self.criterion(fake_part, input_part.detach()) * 10
         loss = loss.reshape(1)
         return fake_part, self.loss_filter(loss)
@@ -79,5 +80,13 @@ class CE_Model(Basic_Model):
         self.old_lr = lr
 
     def save(self, which_epoch, feature):
-        self.save_network(self.net_encoder, feature, which_epoch, self.gpu_ids)
-        self.save_network(self.net_decoder, feature, which_epoch, self.gpu_ids)
+        self.save_network(self.net_encoder, 'encoder_' + feature, which_epoch, self.gpu_ids)
+        self.save_network(self.net_decoder, 'decoder_' + feature, which_epoch, self.gpu_ids)
+
+    def save_networ_to_file(self, encoder_save_path,  decoder_save_path):
+        self.net_encoder.save(encoder_save_path)
+        self.net_decoder.save(decoder_save_path)
+
+    def load_networ_from_file(self, encoder_save_path, decoder_save_path):
+        self.net_encoder.load(encoder_save_path)
+        self.net_decoder.load(decoder_save_path)

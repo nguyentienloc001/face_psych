@@ -57,22 +57,23 @@ class AlignedDataset(Dataset):
         return len(self.file_paths)
 
 jt.flags.use_cuda = 1
+train_batch_size = 1
 opt = TrainOptions().parse()
 eye1_dataset = AlignedDataset()
-eye1_dataset.initialize('./Asian_Face', True, 'eye1')
-eye1_dataset.set_attrs(batch_size=1, shuffle=True)
+eye1_dataset.initialize('./dataset', True, 'eye1')
+eye1_dataset.set_attrs(batch_size=train_batch_size, shuffle=True)
 eye2_dataset = AlignedDataset()
-eye2_dataset.initialize('./Asian_Face', True, 'eye2')
-eye2_dataset.set_attrs(batch_size=1, shuffle=True)
+eye2_dataset.initialize('./dataset', True, 'eye2')
+eye2_dataset.set_attrs(batch_size=train_batch_size, shuffle=True)
 mouth_dataset = AlignedDataset()
-mouth_dataset.initialize('./Asian_Face', True, 'mouth')
-mouth_dataset.set_attrs(batch_size=1, shuffle=True)
+mouth_dataset.initialize('./dataset', True, 'mouth')
+mouth_dataset.set_attrs(batch_size=train_batch_size, shuffle=True)
 nose_dataset = AlignedDataset()
-nose_dataset.initialize('./Asian_Face', True, 'nose')
-nose_dataset.set_attrs(batch_size=1, shuffle = True)
+nose_dataset.initialize('./dataset', True, 'nose')
+nose_dataset.set_attrs(batch_size=train_batch_size, shuffle = True)
 bg_dataset = AlignedDataset()
-bg_dataset.initialize('./Asian_Face', True, 'bg')
-bg_dataset.set_attrs(batch_size=1, shuffle = True)
+bg_dataset.initialize('./dataset', True, 'bg')
+bg_dataset.set_attrs(batch_size=train_batch_size, shuffle = True)
 dataset_list = [eye1_dataset, eye2_dataset, mouth_dataset, nose_dataset, bg_dataset]
 
 feature_list = ['eye1', 'eye2', 'mouth', 'nose', 'bg']
@@ -80,7 +81,8 @@ feature_list = ['eye1', 'eye2', 'mouth', 'nose', 'bg']
 for sequence in range(0, len(feature_list)):
     dataset = dataset_list[sequence]
     feature = feature_list[sequence]
-    iter_path = os.path.join('./checkpoints/CE_iter')
+    iter_path = os.path.join('./checkpoints/CE_iter/abc.txt')
+    # iter_path = os.path.join('./checkpoints/label2city')
     continue_train = False
     if continue_train:
         try:
@@ -123,7 +125,6 @@ for sequence in range(0, len(feature_list)):
             total_steps += batchSize
             epoch_iter += batchSize
             save_fake = True
-            # save_fake = total_steps % display_freq == display_delta
             ############## Forward Pass ######################
             # save vector
 
@@ -135,38 +136,13 @@ for sequence in range(0, len(feature_list)):
             loss_dict = dict(zip(model.loss_names, losses))
 
             losses = loss_dict['Mse_Loss']
-            print(i, losses)
-            # encoder_optimizer.zero_grad()
-            # decoder_optimizer.zero_grad()
-
-            # loss_D = (loss_dict['D_fake'] + loss_dict['D_real']) * 0.5
-            # loss_G = loss_dict['G_GAN'] + loss_dict.get('G_GAN_Feat', 0) + loss_dict.get('G_VGG', 0)
-            # losses.backward()
-            # zero_grad and backward are included in step
-            # encoder_optimizer.backward()
-            # decoder_optimizer.backward()
             encoder_optimizer.step(losses)
             decoder_optimizer.step(losses)
-            ############## Display results and errors ##########
-            ### print out errors
-            if total_steps % print_freq == print_delta:
-                errors = {k: v.data.item() if not isinstance(v, int) else v for k, v in loss_dict.items()}
-                t = (time.time() - iter_start_time) / print_freq
-                visualizer.print_current_errors(epoch, epoch_iter, errors, t)
-                visualizer.plot_current_errors(errors, total_steps)
-                # call(["nvidia-smi", "--format=csv", "--query-gpu=memory.used,memory.free"])
-            ### display output images
-            # if save_fake:
-            #     visuals = OrderedDict([('input_label', util.tensor2label(data, opt.label_nc)),
-            #                            ('synthesized_image', util.tensor2im(generated)),
-            #                            ('real_image', util.tensor2im(data))])
-            #     visualizer.display_current_results(visuals, epoch, total_steps)
-
 
             if total_steps % save_latest_freq == save_delta:
                 print('saving the latest model (epoch %d, total_steps %d)' % (epoch, total_steps))
                 model.save(str(epoch)+'_'+str(total_steps) , feature)
-                # np.savetxt(iter_path, feature_vector, delimiter=',', fmt='%d')
+                np.savetxt(iter_path, feature_vector, delimiter=',', fmt='%f')
             if epoch_iter >= dataset_size:
                 break
 
@@ -180,9 +156,9 @@ for sequence in range(0, len(feature_list)):
         ### save model for this epoch
         if epoch % opt.save_epoch_freq == 0:
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_steps))
-            # model.save('latest', feature)
+            model.save('latest', feature)
             model.save('Epoch_' + str(feature), feature)
-            # np.savetxt(iter_path, (epoch + 1, 0)[0], delimiter=',', fmt='%d')
+            np.savetxt(iter_path, (epoch + 1, 0)[0], delimiter=',', fmt='%d')
 
         ### linearly decay learning rate after certain iterations
         if epoch > opt.niter:
